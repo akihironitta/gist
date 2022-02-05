@@ -1,4 +1,4 @@
-name: Check Code Format
+name: Run main scripts
 
 on: [push]
 
