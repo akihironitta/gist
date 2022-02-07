@@ -200,7 +200,7 @@ def main():
     dm = MNISTDataModule()
     trainer = Trainer(
         max_epochs=1,
-        enable_progress_bar=True,
+        enable_progress_bar=False,
         enable_model_summary=False,
         enable_checkpointing=False,
         logger=False,
