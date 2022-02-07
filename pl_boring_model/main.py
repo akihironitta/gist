@@ -1,8 +1,6 @@
 # https://github.com/PyTorchLightning/pytorch-lightning/blob/fe34bf2a653ebd50e6a3a00be829e3611f820c3c/pl_examples/bug_report/bug_report_model.py
-import os
-
-import torch
 from pytorch_lightning import LightningModule, Trainer
+import torch
 from torch.utils.data import DataLoader, Dataset
 
 

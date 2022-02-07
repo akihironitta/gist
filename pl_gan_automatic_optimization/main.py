@@ -1,14 +1,14 @@
 # https://github.com/PyTorchLightning/pytorch-lightning/blob/fe34bf2a653ebd50e6a3a00be829e3611f820c3c/pl_examples/domain_templates/generative_adversarial_net.py
 import numpy as np
+from pytorch_lightning import LightningDataModule, LightningModule, Trainer
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import torchvision
-import torchvision.transforms as T
-from pytorch_lightning import LightningDataModule, LightningModule, Trainer
 from torch.optim import Adam
 from torch.utils.data import DataLoader, random_split
+import torchvision
 from torchvision.datasets import MNIST
+import torchvision.transforms as T
 
 
 class Generator(nn.Module):

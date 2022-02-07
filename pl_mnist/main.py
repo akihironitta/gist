@@ -1,13 +1,13 @@
 # https://github.com/pytorch/examples/blob/00ea159a99f5cb3f3301a9bf0baa1a5089c7e217/mnist/main.py
 # https://github.com/PyTorchLightning/pytorch-lightning/tree/fe34bf2a653ebd50e6a3a00be829e3611f820c3c/pl_examples/basic_examples/mnist_examples
+from pytorch_lightning import LightningDataModule, LightningModule, Trainer
 import torch
 import torch.nn as nn
-import torchvision.transforms as T
-from pytorch_lightning import LightningDataModule, LightningModule, Trainer
 from torch.nn import functional as F
 from torch.utils.data import DataLoader, random_split
 from torchmetrics import Accuracy
 from torchvision.datasets import MNIST
+import torchvision.transforms as T
 
 
 class Net(nn.Module):
@@ -71,7 +71,9 @@ class ImageClassifier(LightningModule):
         return self.forward(x)
 
     def configure_optimizers(self):
-        optimizer = torch.optim.Adadelta(self.model.parameters(), lr=self.hparams.lr)
+        optimizer = torch.optim.Adadelta(
+            self.model.parameters(), lr=self.hparams.lr
+        )
         scheduler = torch.optim.lr_scheduler.StepLR(
             optimizer, step_size=1, gamma=self.hparams.gamma
         )
@@ -120,16 +122,22 @@ class MNISTDataModule(LightningDataModule):
             )
 
     def train_dataloader(self):
-        return DataLoader(self.train_dataset, batch_size=self.hparams.batch_size)
+        return DataLoader(
+            self.train_dataset, batch_size=self.hparams.batch_size
+        )
 
     def val_dataloader(self):
         return DataLoader(self.val_dataset, batch_size=self.hparams.batch_size)
 
     def test_dataloader(self):
-        return DataLoader(self.test_dataset, batch_size=self.hparams.batch_size)
+        return DataLoader(
+            self.test_dataset, batch_size=self.hparams.batch_size
+        )
 
     def predict_dataloader(self):
-        return DataLoader(self.predict_dataset, batch_size=self.hparams.batch_size)
+        return DataLoader(
+            self.predict_dataset, batch_size=self.hparams.batch_size
+        )
 
 
 def main():
