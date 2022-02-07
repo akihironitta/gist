@@ -1,11 +1,11 @@
 # https://github.com/pytorch/examples/blob/00ea159a99f5cb3f3301a9bf0baa1a5089c7e217/mnist/main.py
 # https://github.com/PyTorchLightning/pytorch-lightning/tree/fe34bf2a653ebd50e6a3a00be829e3611f820c3c/pl_examples/basic_examples/mnist_examples
 import torch
+import torch.nn as nn
 import torchvision.transforms as T
 from pytorch_lightning import LightningDataModule, LightningModule
 from pytorch_lightning.utilities.cli import LightningCLI
 from torch.nn import functional as F
-import torch.nn as nn
 from torch.utils.data import DataLoader, random_split
 from torchmetrics import Accuracy
 from torchvision.datasets import MNIST

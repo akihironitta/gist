@@ -1,10 +1,9 @@
 import os
 
 import torch
-from torch.utils.data import DataLoader, Dataset
-
-from pytorch_lightning import LightningModule, Trainer, LightningDataModule
+from pytorch_lightning import LightningDataModule, LightningModule, Trainer
 from pytorch_lightning.trainer.supporters import CombinedLoader
+from torch.utils.data import DataLoader, Dataset
 
 
 class RandomDataset(Dataset):
