@@ -37,7 +37,7 @@ class Net(nn.Module):
 
 
 class ImageClassifier(LightningModule):
-    def __init__(self, model, lr=1.0, gamma=0.7):
+    def __init__(self, model=None, lr=1.0, gamma=0.7):
         super().__init__()
         self.save_hyperparameters(ignore="model")
         self.model = model or Net()
@@ -143,8 +143,8 @@ def main():
         logger=False,
     )
     trainer.fit(model, datamodule=dm)
-    trainer.test(ckpt_path="best", datamodule=dm)
-    trainer.predict(ckpt_path="best", datamodule=dm)
+    # trainer.test(ckpt_path="best", datamodule=dm)
+    # trainer.predict(ckpt_path="best", datamodule=dm)
 
 
 if __name__ == "__main__":
