@@ -3,8 +3,7 @@
 import torch
 import torch.nn as nn
 import torchvision.transforms as T
-from pytorch_lightning import LightningDataModule, LightningModule
-from pytorch_lightning.utilities.cli import LightningCLI
+from pytorch_lightning import LightningDataModule, LightningModule, Trainer
 from torch.nn import functional as F
 from torch.utils.data import DataLoader, random_split
 from torchmetrics import Accuracy
@@ -134,16 +133,18 @@ class MNISTDataModule(LightningDataModule):
 
 
 def main():
-    cli = LightningCLI(
-        ImageClassifier,
-        MNISTDataModule,
-        seed_everything_default=42,
-        save_config_overwrite=True,
-        run=False,
+    model = ImageClassifier()
+    dm = MNISTDataModule()
+    trainer = Trainer(
+        max_epochs=1,
+        enable_progress_bar=False,
+        enable_model_summary=False,
+        enable_checkpointing=False,
+        logger=False,
     )
-    cli.trainer.fit(cli.model, datamodule=cli.datamodule)
-    # cli.trainer.test(ckpt_path="best", datamodule=cli.datamodule)
-    cli.trainer.predict(ckpt_path="best", datamodule=cli.datamodule)
+    trainer.fit(model, datamodule=dm)
+    trainer.test(ckpt_path="best", datamodule=dm)
+    trainer.predict(ckpt_path="best", datamodule=dm)
 
 
 if __name__ == "__main__":
