@@ -5,8 +5,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torchvision
 import torchvision.transforms as T
-from pytorch_lightning import LightningDataModule, LightningModule
-from pytorch_lightning.utilities.cli import LightningCLI
+from pytorch_lightning import LightningDataModule, LightningModule, Trainer
+from torch.optim import Adam
 from torch.utils.data import DataLoader, random_split
 from torchvision.datasets import MNIST
 
@@ -181,26 +181,31 @@ class GAN(LightningModule):
         lr = self.hparams.learning_rate
         b1 = self.hparams.b1
         b2 = self.hparams.b2
-        opt_g = torch.optim.Adam(self.generator.parameters(), lr=lr, betas=(b1, b2))
-        opt_d = torch.optim.Adam(self.discriminator.parameters(), lr=lr, betas=(b1, b2))
+        opt_g = Adam(self.generator.parameters(), lr=lr, betas=(b1, b2))
+        opt_d = Adam(self.discriminator.parameters(), lr=lr, betas=(b1, b2))
         return [opt_g, opt_d], []
 
     def on_epoch_end(self):
         z = self.validation_z.type_as(self.generator.model[0].weight)
         sample_imgs = self(z)
         grid = torchvision.utils.make_grid(sample_imgs)
-        self.logger.experiment.add_image("generated_images", grid, self.current_epoch)
+        if self.logger:
+            self.logger.experiment.add_image(
+                "generated_images", grid, self.current_epoch
+            )
 
 
 def main():
-    cli = LightningCLI(
-        GAN,
-        MNISTDataModule,
-        seed_everything_default=42,
-        save_config_overwrite=True,
-        run=False,
+    model = GAN()
+    dm = MNISTDataModule()
+    trainer = Trainer(
+        max_epochs=1,
+        enable_progress_bar=True,
+        enable_model_summary=False,
+        enable_checkpointing=False,
+        logger=False,
     )
-    cli.trainer.fit(cli.model, datamodule=cli.datamodule)
+    trainer.fit(model, datamodule=dm)
 
 
 if __name__ == "__main__":
