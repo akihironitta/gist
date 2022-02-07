@@ -3,17 +3,9 @@ line-length = 79
 target-version = ['py39']
 exclude = '''
 /(
-    \.eggs
-  | \.git
-  | \.hg
+    \.git
   | \.mypy_cache
-  | \.tox
   | \.venv
-  | _build
-  | buck-out
-  | build
-  | dist
-  | docs
 )/
 '''
 
