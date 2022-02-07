@@ -50,11 +50,6 @@ def main():
 
     model = BoringModel()
     trainer = Trainer(
-        default_root_dir=os.getcwd(),
-        limit_train_batches=1,
-        limit_val_batches=1,
-        limit_test_batches=1,
-        num_sanity_val_steps=0,
         max_epochs=1,
         enable_progress_bar=False,
         enable_model_summary=False,

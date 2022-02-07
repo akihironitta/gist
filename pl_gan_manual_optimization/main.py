@@ -6,16 +6,16 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torchvision
 import torchvision.transforms as T
-from pytorch_lightning import LightningDataModule, LightningModule
+from pytorch_lightning import LightningDataModule, LightningModule, Trainer
 from pytorch_lightning.utilities.cli import LightningCLI
 from torch.utils.data import DataLoader, random_split
+from torch.optim import Adam
 from torchvision.datasets import MNIST
 
 
 class Generator(nn.Module):
     def __init__(self, latent_dim: int = 100, img_shape: tuple = (1, 28, 28)):
         super().__init__()
-        self.img_shape = img_shape
 
         def block(in_feat, out_feat, normalize=True):
             layers = [nn.Linear(in_feat, out_feat)]
@@ -24,6 +24,7 @@ class Generator(nn.Module):
             layers.append(nn.LeakyReLU(0.2, inplace=True))
             return layers
 
+        self.img_shape = img_shape
         self.model = nn.Sequential(
             *block(latent_dim, 128, normalize=False),
             *block(128, 256),
@@ -40,9 +41,8 @@ class Generator(nn.Module):
 
 
 class Discriminator(nn.Module):
-    def __init__(self, img_shape):
+    def __init__(self, img_shape: tuple = (1, 28, 28)):
         super().__init__()
-
         self.model = nn.Sequential(
             nn.Linear(int(np.prod(img_shape)), 512),
             nn.LeakyReLU(0.2, inplace=True),
@@ -54,7 +54,6 @@ class Discriminator(nn.Module):
     def forward(self, img):
         img_flat = img.view(img.size(0), -1)
         validity = self.model(img_flat)
-
         return validity
 
 
@@ -119,11 +118,11 @@ class GAN(LightningModule):
         self.D = Discriminator()
         self.automatic_optimization = False
 
-    def sample_z(self, n) -> Tensor:
+    def sample_z(self, n):
         sample = self._Z.sample((n,))
         return sample
 
-    def sample_G(self, n) -> Tensor:
+    def sample_G(self, n):
         z = self.sample_z(n)
         return self.G(z)
 
@@ -165,19 +164,22 @@ class GAN(LightningModule):
         self.log_dict({"g_loss": errG, "d_loss": errD}, prog_bar=True)
 
     def configure_optimizers(self):
-        g_opt = torch.optim.Adam(self.G.parameters(), lr=1e-5)
-        d_opt = torch.optim.Adam(self.D.parameters(), lr=1e-5)
+        g_opt = Adam(self.G.parameters(), lr=1e-5)
+        d_opt = Adam(self.D.parameters(), lr=1e-5)
         return g_opt, d_opt
 
+
 def main():
-    cli = LightningCLI(
-        GAN,
-        MNISTDataModule,
-        seed_everything_default=42,
-        save_config_overwrite=True,
-        run=False,
+    model = GAN()
+    dm = MNISTDataModule()
+    trainer = Trainer(
+        max_epochs=1,
+        enable_progress_bar=False,
+        enable_model_summary=False,
+        enable_checkpointing=False,
+        logger=False,
     )
-    cli.trainer.fit(cli.model, datamodule=cli.datamodule)
+    trainer.fit(model, datamodule=dm)
 
 
 if __name__ == "__main__":
