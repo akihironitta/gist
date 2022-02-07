@@ -22,13 +22,16 @@ jobs:
         pip install flake8 black isort
 
     - name: isort
+      if: always()
       run: |
         isort . --diff --check
 
     - name: flake8
+      if: always()
       run: |
         flake8 .
 
     - name: black
+      if: always()
       run: |
         black . --diff
