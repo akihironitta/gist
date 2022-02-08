@@ -147,37 +147,49 @@ class GAN(LightningModule):
         return F.binary_cross_entropy_with_logits(y_hat, y)
 
     def training_step(self, batch, batch_idx, optimizer_idx):
-        imgs, _ = batch
-        batch_size = imgs.size(0)
-        z = torch.randn(batch_size, self.hparams.latent_dim).type_as(imgs)
+        x, _ = batch
+        batch_size = x.size(0)
+        z = torch.randn(
+            batch_size, self.hparams.latent_dim, device=self.device
+        )
 
+        ##########################
+        # Optimize Discriminator #
+        ##########################
         if optimizer_idx == 0:
-            valid = torch.ones(batch_size, 1).type_as(imgs)
-            g_loss = self.adversarial_loss(
-                self.discriminator(self.generator(z)), valid
-            )
-            self.log("loss/generator", g_loss, prog_bar=True)
-            return g_loss
+            real_label = torch.ones(batch_size, 1, device=self.device)
+            fake_label = torch.zeros(batch_size, 1, device=self.device)
 
-        if optimizer_idx == 1:
-            valid = torch.ones(batch_size, 1).type_as(imgs)
-            real_loss = self.adversarial_loss(self.discriminator(imgs), valid)
-            fake = torch.zeros(batch_size, 1).type_as(imgs)
-            fake_loss = self.adversarial_loss(
-                self.discriminator(self.generator(z).detach()), fake
-            )
-            d_loss = (real_loss + fake_loss) / 2
+            d_x = self.discriminator(x)
+            d_loss_real = F.binary_cross_entropy_with_logits(d_x, real_label)
+
+            g_x = self.generator(z).detach()
+            d_z = self.discriminator(g_x)
+
+            d_loss_fake = F.binary_cross_entropy_with_logits(d_z, fake_label)
+            d_loss = d_loss_real + d_loss_fake
             self.log("loss/discriminator", d_loss, prog_bar=True)
             return d_loss
 
+        ######################
+        # Optimize Generator #
+        ######################
+        if optimizer_idx == 1:
+            real_label = torch.ones(batch_size, 1, device=self.device)
+            g_x = self.generator(z)
+            d_z = self.discriminator(g_x)
+            g_loss = F.binary_cross_entropy_with_logits(d_z, real_label)
+            self.log("loss/generator", g_loss, prog_bar=True)
+            return g_loss
+
     def configure_optimizers(self):
-        opt_g = Adam(
-            self.generator.parameters(), lr=0.0002, betas=(0.5, 0.999)
-        )
         opt_d = Adam(
             self.discriminator.parameters(), lr=0.0002, betas=(0.5, 0.999)
         )
-        return [opt_g, opt_d]
+        opt_g = Adam(
+            self.generator.parameters(), lr=0.0002, betas=(0.5, 0.999)
+        )
+        return [opt_d, opt_g]
 
     def on_epoch_end(self):
         if self.logger:
@@ -193,13 +205,13 @@ def main():
     model = GAN()
     dm = MNISTDataModule()
     trainer = Trainer(
-        max_epochs=1,
+        max_epochs=100,
         accelerator="auto",
         devices="auto",
-        enable_progress_bar=False,
-        enable_model_summary=False,
-        enable_checkpointing=False,
-        logger=False,
+        # enable_progress_bar=False,
+        # enable_model_summary=False,
+        # enable_checkpointing=False,
+        # logger=False,
     )
     trainer.fit(model, datamodule=dm)
 
