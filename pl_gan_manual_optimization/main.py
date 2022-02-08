@@ -174,9 +174,11 @@ class GAN(LightningModule):
         self.log("loss/discriminator", d_loss, prog_bar=True)
 
     def configure_optimizers(self):
-        opt_g = Adam(self.generator.parameters(), lr=0.002, betas=(0.5, 0.999))
+        opt_g = Adam(
+            self.generator.parameters(), lr=0.0002, betas=(0.5, 0.999)
+        )
         opt_d = Adam(
-            self.discriminator.parameters(), lr=0.002, betas=(0.5, 0.999)
+            self.discriminator.parameters(), lr=0.0002, betas=(0.5, 0.999)
         )
         return [opt_g, opt_d]
 
