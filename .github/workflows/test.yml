@@ -3,21 +3,17 @@ name: Run main scripts
 on: [push]
 
 jobs:
-  lint:
-
+  main:
     runs-on: ubuntu-latest
-
     steps:
     - name: Checkout
       uses: actions/checkout@v2
-
     - name: Set up Python 3.9
       uses: actions/setup-python@v1
       with:
         python-version: 3.9
-
     - name: Install dependencies and run main.py
       run: |
-        python -m pip install --upgrade pip
-        pip install -r _requirements/all.txt
+        python -m pip install -U pip
+        pip install -r _requirements/all.txt -f https://download.pytorch.org/whl/cpu/torch_stable.html
         bash .github/workflows/run_script.sh
