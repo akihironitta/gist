@@ -205,13 +205,13 @@ def main():
     model = GAN()
     dm = MNISTDataModule()
     trainer = Trainer(
-        max_epochs=100,
+        max_epochs=1,
         accelerator="auto",
         devices="auto",
-        # enable_progress_bar=False,
-        # enable_model_summary=False,
-        # enable_checkpointing=False,
-        # logger=False,
+        enable_progress_bar=False,
+        enable_model_summary=False,
+        enable_checkpointing=False,
+        logger=False,
     )
     trainer.fit(model, datamodule=dm)
 
