@@ -1,8 +1,6 @@
 # https://github.com/PyTorchLightning/pytorch-lightning/blob/fe34bf2a653ebd50e6a3a00be829e3611f820c3c/pl_examples/bug_report/bug_report_model.py
-import os
-
-import torch
 from pytorch_lightning import LightningModule, Trainer
+import torch
 from torch.utils.data import DataLoader, Dataset
 
 
@@ -50,12 +48,9 @@ def main():
 
     model = BoringModel()
     trainer = Trainer(
-        default_root_dir=os.getcwd(),
-        limit_train_batches=1,
-        limit_val_batches=1,
-        limit_test_batches=1,
-        num_sanity_val_steps=0,
         max_epochs=1,
+        accelerator="auto",
+        devices="auto",
         enable_progress_bar=False,
         enable_model_summary=False,
         enable_checkpointing=False,

@@ -1,14 +1,14 @@
 # https://github.com/PyTorchLightning/pytorch-lightning/blob/fe34bf2a653ebd50e6a3a00be829e3611f820c3c/pl_examples/domain_templates/generative_adversarial_net.py
 import numpy as np
+from pytorch_lightning import LightningDataModule, LightningModule, Trainer
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import torchvision
-import torchvision.transforms as T
-from pytorch_lightning import LightningDataModule, LightningModule
-from pytorch_lightning.utilities.cli import LightningCLI
+from torch.optim import Adam
 from torch.utils.data import DataLoader, random_split
+import torchvision
 from torchvision.datasets import MNIST
+import torchvision.transforms as T
 
 
 class Generator(nn.Module):
@@ -58,7 +58,7 @@ class Discriminator(nn.Module):
 class MNISTDataModule(LightningDataModule):
     def __init__(
         self,
-        batch_size: int = 32,
+        batch_size: int = 64,
         data_dir: str = "./data",
         num_workers: int = 0,
     ):
@@ -67,7 +67,7 @@ class MNISTDataModule(LightningDataModule):
 
     @property
     def transform(self):
-        return T.Compose([T.ToTensor(), T.Normalize((0.1307,), (0.3081,))])
+        return T.Compose([T.ToTensor(), T.Normalize((0.5,), (0.5,))])
 
     def prepare_data(self):
         MNIST(self.hparams.data_dir, download=True, train=True)
@@ -131,9 +131,6 @@ class GAN(LightningModule):
     def __init__(
         self,
         img_shape: tuple = (1, 28, 28),
-        learning_rate: float = 0.0002,
-        b1: float = 0.5,
-        b2: float = 0.999,
         latent_dim: int = 100,
     ):
         super().__init__()
@@ -146,61 +143,77 @@ class GAN(LightningModule):
     def forward(self, z):
         return self.generator(z)
 
-    @staticmethod
-    def adversarial_loss(y_hat, y):
+    def adversarial_loss(self, y_hat, y):
         return F.binary_cross_entropy_with_logits(y_hat, y)
 
     def training_step(self, batch, batch_idx, optimizer_idx):
-        imgs, _ = batch
-        z = torch.randn(imgs.shape[0], self.hparams.latent_dim)
-        z = z.type_as(imgs)
+        x, _ = batch
+        batch_size = x.size(0)
+        z = torch.randn(
+            batch_size, self.hparams.latent_dim, device=self.device
+        )
 
+        ##########################
+        # Optimize Discriminator #
+        ##########################
         if optimizer_idx == 0:
-            valid = torch.ones(imgs.size(0), 1)
-            valid = valid.type_as(imgs)
-            g_loss = self.adversarial_loss(self.discriminator(self(z)), valid)
-            tqdm_dict = {"g_loss": g_loss}
-            self.log_dict(tqdm_dict)
-            return g_loss
+            real_label = torch.ones(batch_size, 1, device=self.device)
+            fake_label = torch.zeros(batch_size, 1, device=self.device)
 
-        if optimizer_idx == 1:
-            valid = torch.ones(imgs.size(0), 1)
-            valid = valid.type_as(imgs)
-            real_loss = self.adversarial_loss(self.discriminator(imgs), valid)
-            fake = torch.zeros(imgs.size(0), 1)
-            fake = fake.type_as(imgs)
-            fake_loss = self.adversarial_loss(
-                self.discriminator(self(z).detach()), fake
-            )
-            d_loss = (real_loss + fake_loss) / 2
-            tqdm_dict = {"d_loss": d_loss}
-            self.log_dict(tqdm_dict)
+            d_x = self.discriminator(x)
+            d_loss_real = F.binary_cross_entropy_with_logits(d_x, real_label)
+
+            g_x = self.generator(z).detach()
+            d_z = self.discriminator(g_x)
+
+            d_loss_fake = F.binary_cross_entropy_with_logits(d_z, fake_label)
+            d_loss = d_loss_real + d_loss_fake
+            self.log("loss/discriminator", d_loss, prog_bar=True)
             return d_loss
 
+        ######################
+        # Optimize Generator #
+        ######################
+        if optimizer_idx == 1:
+            real_label = torch.ones(batch_size, 1, device=self.device)
+            g_x = self.generator(z)
+            d_z = self.discriminator(g_x)
+            g_loss = F.binary_cross_entropy_with_logits(d_z, real_label)
+            self.log("loss/generator", g_loss, prog_bar=True)
+            return g_loss
+
     def configure_optimizers(self):
-        lr = self.hparams.learning_rate
-        b1 = self.hparams.b1
-        b2 = self.hparams.b2
-        opt_g = torch.optim.Adam(self.generator.parameters(), lr=lr, betas=(b1, b2))
-        opt_d = torch.optim.Adam(self.discriminator.parameters(), lr=lr, betas=(b1, b2))
-        return [opt_g, opt_d], []
+        opt_d = Adam(
+            self.discriminator.parameters(), lr=0.0002, betas=(0.5, 0.999)
+        )
+        opt_g = Adam(
+            self.generator.parameters(), lr=0.0002, betas=(0.5, 0.999)
+        )
+        return [opt_d, opt_g]
 
     def on_epoch_end(self):
-        z = self.validation_z.type_as(self.generator.model[0].weight)
-        sample_imgs = self(z)
-        grid = torchvision.utils.make_grid(sample_imgs)
-        self.logger.experiment.add_image("generated_images", grid, self.current_epoch)
+        if self.logger:
+            z = self.validation_z.type_as(self.generator.model[0].weight)
+            sample_imgs = self.generator(z)
+            grid = torchvision.utils.make_grid(sample_imgs)
+            self.logger.experiment.add_image(
+                "generated_images", grid, self.current_epoch
+            )
 
 
 def main():
-    cli = LightningCLI(
-        GAN,
-        MNISTDataModule,
-        seed_everything_default=42,
-        save_config_overwrite=True,
-        run=False,
+    model = GAN()
+    dm = MNISTDataModule()
+    trainer = Trainer(
+        max_epochs=1,
+        accelerator="auto",
+        devices="auto",
+        enable_progress_bar=False,
+        enable_model_summary=False,
+        enable_checkpointing=False,
+        logger=False,
     )
-    cli.trainer.fit(cli.model, datamodule=cli.datamodule)
+    trainer.fit(model, datamodule=dm)
 
 
 if __name__ == "__main__":

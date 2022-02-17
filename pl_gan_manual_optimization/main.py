@@ -1,21 +1,20 @@
 # https://github.com/PyTorchLightning/pytorch-lightning/blob/fe34bf2a653ebd50e6a3a00be829e3611f820c3c/docs/source/common/optimizers.rst#use-multiple-optimizers-like-gans
 # https://github.com/PyTorchLightning/pytorch-lightning/blob/fe34bf2a653ebd50e6a3a00be829e3611f820c3c/pl_examples/domain_templates/generative_adversarial_net.py
 import numpy as np
+from pytorch_lightning import LightningDataModule, LightningModule, Trainer
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import torchvision
-import torchvision.transforms as T
-from pytorch_lightning import LightningDataModule, LightningModule
-from pytorch_lightning.utilities.cli import LightningCLI
+from torch.optim import Adam
 from torch.utils.data import DataLoader, random_split
+import torchvision
 from torchvision.datasets import MNIST
+import torchvision.transforms as T
 
 
 class Generator(nn.Module):
     def __init__(self, latent_dim: int = 100, img_shape: tuple = (1, 28, 28)):
         super().__init__()
-        self.img_shape = img_shape
 
         def block(in_feat, out_feat, normalize=True):
             layers = [nn.Linear(in_feat, out_feat)]
@@ -24,6 +23,7 @@ class Generator(nn.Module):
             layers.append(nn.LeakyReLU(0.2, inplace=True))
             return layers
 
+        self.img_shape = img_shape
         self.model = nn.Sequential(
             *block(latent_dim, 128, normalize=False),
             *block(128, 256),
@@ -40,9 +40,8 @@ class Generator(nn.Module):
 
 
 class Discriminator(nn.Module):
-    def __init__(self, img_shape):
+    def __init__(self, img_shape: tuple = (1, 28, 28)):
         super().__init__()
-
         self.model = nn.Sequential(
             nn.Linear(int(np.prod(img_shape)), 512),
             nn.LeakyReLU(0.2, inplace=True),
@@ -54,18 +53,17 @@ class Discriminator(nn.Module):
     def forward(self, img):
         img_flat = img.view(img.size(0), -1)
         validity = self.model(img_flat)
-
         return validity
 
 
 class MNISTDataModule(LightningDataModule):
-    def __init__(self, batch_size=32, data_dir="./data"):
+    def __init__(self, batch_size=64, data_dir="./data"):
         super().__init__()
         self.save_hyperparameters()
 
     @property
     def transform(self):
-        return T.Compose([T.ToTensor(), T.Normalize((0.1307,), (0.3081,))])
+        return T.Compose([T.ToTensor(), T.Normalize((0.5,), (0.5,))])
 
     def prepare_data(self):
         MNIST(self.hparams.data_dir, download=True, train=True)
@@ -100,84 +98,113 @@ class MNISTDataModule(LightningDataModule):
             )
 
     def train_dataloader(self):
-        return DataLoader(self.train_dataset, batch_size=self.hparams.batch_size)
+        return DataLoader(
+            self.train_dataset, batch_size=self.hparams.batch_size
+        )
 
     def val_dataloader(self):
         return DataLoader(self.val_dataset, batch_size=self.hparams.batch_size)
 
     def test_dataloader(self):
-        return DataLoader(self.test_dataset, batch_size=self.hparams.batch_size)
+        return DataLoader(
+            self.test_dataset, batch_size=self.hparams.batch_size
+        )
 
     def predict_dataloader(self):
-        return DataLoader(self.predict_dataset, batch_size=self.hparams.batch_size)
+        return DataLoader(
+            self.predict_dataset, batch_size=self.hparams.batch_size
+        )
 
 
 class GAN(LightningModule):
-    def __init__(self):
+    def __init__(
+        self,
+        img_shape: tuple = (1, 28, 28),
+        latent_dim: int = 100,
+    ):
         super().__init__()
-        self.G = Generator()
-        self.D = Discriminator()
+        self.save_hyperparameters()
+        self.generator = Generator(latent_dim=latent_dim, img_shape=img_shape)
+        self.discriminator = Discriminator(img_shape=img_shape)
+        self.validation_z = torch.randn(8, latent_dim)
+        self.example_input_array = torch.zeros(2, latent_dim)
         self.automatic_optimization = False
 
-    def sample_z(self, n) -> Tensor:
-        sample = self._Z.sample((n,))
-        return sample
-
-    def sample_G(self, n) -> Tensor:
-        z = self.sample_z(n)
-        return self.G(z)
+    def forward(self, z):
+        return self.generator(z)
 
     def training_step(self, batch, batch_idx):
-        g_opt, d_opt = self.optimizers()
+        opt_g, opt_d = self.optimizers()
 
-        X, _ = batch
-        batch_size = X.shape[0]
-
+        x, _ = batch
+        batch_size = x.size(0)
         real_label = torch.ones((batch_size, 1), device=self.device)
         fake_label = torch.zeros((batch_size, 1), device=self.device)
-
-        g_X = self.sample_G(batch_size)
+        z = torch.randn(
+            batch_size, self.hparams.latent_dim, device=self.device
+        )
+        g_x = self.generator(z)
 
         ##########################
         # Optimize Discriminator #
         ##########################
-        d_x = self.D(X)
-        errD_real = self.criterion(d_x, real_label)
+        d_x = self.discriminator(x)
+        d_loss_real = F.binary_cross_entropy_with_logits(d_x, real_label)
 
-        d_z = self.D(g_X.detach())
-        errD_fake = self.criterion(d_z, fake_label)
-        errD = errD_real + errD_fake
+        d_z = self.discriminator(g_x.detach())
+        d_loss_fake = F.binary_cross_entropy_with_logits(d_z, fake_label)
 
-        d_opt.zero_grad()
-        self.manual_backward(errD)
-        d_opt.step()
+        d_loss = d_loss_real + d_loss_fake
+
+        opt_d.zero_grad()
+        self.manual_backward(d_loss)
+        opt_d.step()
 
         ######################
         # Optimize Generator #
         ######################
-        d_z = self.D(g_X)
-        errG = self.criterion(d_z, real_label)
+        d_z = self.discriminator(g_x)
+        g_loss = F.binary_cross_entropy_with_logits(d_z, real_label)
 
-        g_opt.zero_grad()
-        self.manual_backward(errG)
-        g_opt.step()
+        opt_g.zero_grad()
+        self.manual_backward(g_loss)
+        opt_g.step()
 
-        self.log_dict({"g_loss": errG, "d_loss": errD}, prog_bar=True)
+        self.log("loss/generator", g_loss, prog_bar=True)
+        self.log("loss/discriminator", d_loss, prog_bar=True)
 
     def configure_optimizers(self):
-        g_opt = torch.optim.Adam(self.G.parameters(), lr=1e-5)
-        d_opt = torch.optim.Adam(self.D.parameters(), lr=1e-5)
-        return g_opt, d_opt
+        opt_g = Adam(
+            self.generator.parameters(), lr=0.0002, betas=(0.5, 0.999)
+        )
+        opt_d = Adam(
+            self.discriminator.parameters(), lr=0.0002, betas=(0.5, 0.999)
+        )
+        return [opt_g, opt_d]
+
+    def on_epoch_end(self):
+        if self.logger:
+            z = self.validation_z.type_as(self.generator.model[0].weight)
+            sample_imgs = self(z)
+            grid = torchvision.utils.make_grid(sample_imgs)
+            self.logger.experiment.add_image(
+                "generated_images", grid, self.current_epoch
+            )
+
 
 def main():
-    cli = LightningCLI(
-        GAN,
-        MNISTDataModule,
-        seed_everything_default=42,
-        save_config_overwrite=True,
-        run=False,
+    model = GAN()
+    dm = MNISTDataModule()
+    trainer = Trainer(
+        max_epochs=1,
+        accelerator="auto",
+        devices="auto",
+        enable_progress_bar=False,
+        enable_model_summary=False,
+        enable_checkpointing=False,
+        logger=False,
     )
-    cli.trainer.fit(cli.model, datamodule=cli.datamodule)
+    trainer.fit(model, datamodule=dm)
 
 
 if __name__ == "__main__":

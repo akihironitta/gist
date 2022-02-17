@@ -1,14 +1,13 @@
 # https://github.com/pytorch/examples/blob/00ea159a99f5cb3f3301a9bf0baa1a5089c7e217/mnist/main.py
 # https://github.com/PyTorchLightning/pytorch-lightning/tree/fe34bf2a653ebd50e6a3a00be829e3611f820c3c/pl_examples/basic_examples/mnist_examples
+from pytorch_lightning import LightningDataModule, LightningModule, Trainer
 import torch
-import torchvision.transforms as T
-from pytorch_lightning import LightningDataModule, LightningModule
-from pytorch_lightning.utilities.cli import LightningCLI
-from torch.nn import functional as F
 import torch.nn as nn
+from torch.nn import functional as F
 from torch.utils.data import DataLoader, random_split
 from torchmetrics import Accuracy
 from torchvision.datasets import MNIST
+import torchvision.transforms as T
 
 
 class Net(nn.Module):
@@ -38,7 +37,7 @@ class Net(nn.Module):
 
 
 class ImageClassifier(LightningModule):
-    def __init__(self, model, lr=1.0, gamma=0.7):
+    def __init__(self, model=None, lr=1.0, gamma=0.7):
         super().__init__()
         self.save_hyperparameters(ignore="model")
         self.model = model or Net()
@@ -72,7 +71,9 @@ class ImageClassifier(LightningModule):
         return self.forward(x)
 
     def configure_optimizers(self):
-        optimizer = torch.optim.Adadelta(self.model.parameters(), lr=self.hparams.lr)
+        optimizer = torch.optim.Adadelta(
+            self.model.parameters(), lr=self.hparams.lr
+        )
         scheduler = torch.optim.lr_scheduler.StepLR(
             optimizer, step_size=1, gamma=self.hparams.gamma
         )
@@ -121,29 +122,39 @@ class MNISTDataModule(LightningDataModule):
             )
 
     def train_dataloader(self):
-        return DataLoader(self.train_dataset, batch_size=self.hparams.batch_size)
+        return DataLoader(
+            self.train_dataset, batch_size=self.hparams.batch_size
+        )
 
     def val_dataloader(self):
         return DataLoader(self.val_dataset, batch_size=self.hparams.batch_size)
 
     def test_dataloader(self):
-        return DataLoader(self.test_dataset, batch_size=self.hparams.batch_size)
+        return DataLoader(
+            self.test_dataset, batch_size=self.hparams.batch_size
+        )
 
     def predict_dataloader(self):
-        return DataLoader(self.predict_dataset, batch_size=self.hparams.batch_size)
+        return DataLoader(
+            self.predict_dataset, batch_size=self.hparams.batch_size
+        )
 
 
 def main():
-    cli = LightningCLI(
-        ImageClassifier,
-        MNISTDataModule,
-        seed_everything_default=42,
-        save_config_overwrite=True,
-        run=False,
+    model = ImageClassifier()
+    dm = MNISTDataModule()
+    trainer = Trainer(
+        max_epochs=1,
+        accelerator="auto",
+        devices="auto",
+        enable_progress_bar=False,
+        enable_model_summary=False,
+        enable_checkpointing=False,
+        logger=False,
     )
-    cli.trainer.fit(cli.model, datamodule=cli.datamodule)
-    # cli.trainer.test(ckpt_path="best", datamodule=cli.datamodule)
-    cli.trainer.predict(ckpt_path="best", datamodule=cli.datamodule)
+    trainer.fit(model, datamodule=dm)
+    # trainer.test(ckpt_path="best", datamodule=dm)
+    # trainer.predict(ckpt_path="best", datamodule=dm)
 
 
 if __name__ == "__main__":

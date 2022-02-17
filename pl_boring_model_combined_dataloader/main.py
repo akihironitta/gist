@@ -1,10 +1,7 @@
-import os
-
+from pytorch_lightning import LightningDataModule, LightningModule, Trainer
+from pytorch_lightning.trainer.supporters import CombinedLoader
 import torch
 from torch.utils.data import DataLoader, Dataset
-
-from pytorch_lightning import LightningModule, Trainer, LightningDataModule
-from pytorch_lightning.trainer.supporters import CombinedLoader
 
 
 class RandomDataset(Dataset):
@@ -47,9 +44,10 @@ mode = "min_size"
 
 class MyData(LightningDataModule):
     def train_dataloader(self):
-        # Training data has 10 batches in max_size_cycle model, and 6 in min_size mode.
-        # Training should run oder 5 resp. 3 steps because we have 2 GPUs.
-        # In fact, training runs over 10 resp. 6 steps, and each GPU sees all the data.
+        # Training data has 10 batches in max_size_cycle model, and 6 in
+        # min_size mode. Training should run oder 5 resp. 3 steps because we
+        # have 2 GPUs. In fact, training runs over 10 resp. 6 steps, and each
+        # GPU sees all the data.
         return CombinedLoader(
             {
                 "a": DataLoader(RandomDataset(32, len_a), batch_size=1),
@@ -71,11 +69,17 @@ class MyData(LightningDataModule):
 def run():
 
     model = BoringModel()
+    dm = MyData()
     trainer = Trainer(
-        default_root_dir=os.getcwd(),
         max_epochs=1,
+        accelerator="auto",
+        devices="auto",
+        enable_progress_bar=False,
+        enable_model_summary=False,
+        enable_checkpointing=False,
+        logger=False,
     )
-    trainer.fit(model, datamodule=MyData())
+    trainer.fit(model, datamodule=dm)
 
 
 if __name__ == "__main__":
