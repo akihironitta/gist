@@ -1,7 +1,6 @@
 # https://github.com/PyTorchLightning/pytorch-lightning/blob/4dba492fb55e2862bb20f304e6bef43f1f151fc7/pl_examples/loop_examples/yielding_training_step.py
 from functools import partial
 import inspect
-from typing import Generator
 
 import numpy as np
 from pytorch_lightning import LightningDataModule, LightningModule, Trainer
@@ -151,7 +150,8 @@ class YieldLoop(OptimizerLoop):
             self.trainer.lightning_module.training_step
         ):
             raise MisconfigurationException(
-                "The `LightningModule` does not yield anything in the `training_step`."
+                "The `LightningModule` does not yield anything in the"
+                " `training_step`."
             )
         assert self.trainer.lightning_module.automatic_optimization
 
@@ -196,8 +196,9 @@ class YieldLoop(OptimizerLoop):
             strategy_output if model_output is None else model_output
         )
 
-        # The closure result takes care of properly detaching the loss for logging and peforms
-        # some additional checks that the output format is correct.
+        # The closure result takes care of properly detaching the loss for
+        # logging and peforms some additional checks that the output format is
+        # correct.
         result = ClosureResult.from_training_step_output(
             training_step_output, self.trainer.accumulate_grad_batches
         )
