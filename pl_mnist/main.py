@@ -145,6 +145,8 @@ def main():
     dm = MNISTDataModule()
     trainer = Trainer(
         max_epochs=1,
+        accelerator="auto",
+        devices="auto",
         enable_progress_bar=False,
         enable_model_summary=False,
         enable_checkpointing=False,
