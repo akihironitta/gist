@@ -47,6 +47,7 @@ MNIST/
 __pycache__/
 _build/
 app/models/
+data
 build/
 celerybeat-schedule
 cifar-10-batches-py
