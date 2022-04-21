@@ -40,24 +40,30 @@ class BoringModel(LightningModule):
     def configure_optimizers(self):
         return torch.optim.SGD(self.layer.parameters(), lr=0.1)
 
+    def on_before_batch_transfer(self, batch, dataloader_idx):
+        print(f"on_before_batch_transfer is running in stage {self.trainer.state.stage}")
+        # these are all False if self.trainer.sanity_checking.
+        print(f"---> {self.trainer.training} {self.trainer.validating} {self.trainer.testing} {self.trainer.evaluating}")
+        return batch
+
 
 def main():
     train_data = DataLoader(RandomDataset(32, 64), batch_size=2)
     val_data = DataLoader(RandomDataset(32, 64), batch_size=2)
-    test_data = DataLoader(RandomDataset(32, 64), batch_size=2)
 
     model = BoringModel()
     trainer = Trainer(
         max_epochs=1,
-        accelerator="auto",
-        devices="auto",
+        accelerator="gpu",
+        devices=2,
+        limit_train_batches=1,
+        limit_val_batches=1,
         enable_progress_bar=False,
         enable_model_summary=False,
         enable_checkpointing=False,
         logger=False,
     )
     trainer.fit(model, train_dataloaders=train_data, val_dataloaders=val_data)
-    trainer.test(model, dataloaders=test_data)
 
 
 if __name__ == "__main__":
