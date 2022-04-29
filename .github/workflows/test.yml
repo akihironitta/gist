@@ -14,7 +14,8 @@ jobs:
       matrix:
         python-version: ["3.9"]
         pl-release: ["stable", "master"]
-        torch-release: ["lts", "stable"]
+        torch-release: ["lts", "stable", "nightly"]
+    # https://github.com/conda-incubator/setup-miniconda/issues/179
     defaults:
       run:
         shell: bash -l {0}
@@ -26,25 +27,22 @@ jobs:
         miniconda-version: latest
         activate-environment: test
         auto-update-conda: true
-        auto-activate-base: false
+    - name: Install PyTorch (stable)
+      if: ${{ matrix.torch-release }} == 'stable'
+      run: conda install pytorch torchvision cpuonly -c pytorch
+    - name: Install PyTorch (lts)
+      if: ${{ matrix.torch-release }} == 'lts'
+      run: conda install pytorch torchvision cpuonly -c pytorch-lts
+    - name: Install PyTorch (nightly)
+      if: ${{ matrix.torch-release }} == 'nightly'
+      run: conda install pytorch torchvision cpuonly -c pytorch-nightly
     - name: Install dependencies
       run: |
-        which python pip conda
-        python --version
-        pip --version
-        pip list
-        # conda install pytorch torchvision cpuonly -c pytorch-lts
-        # conda install pytorch torchvision cpuonly -c pytorch
-        conda install -q pytorch torchvision cpuonly -c pytorch-nightly
-        python -c "import torch; print(torch.__version__)"
-        conda info -e
-        conda list
-        python -c "import torch; print(torch.__version__)"
-        # pip install -r requirements/all.txt
-    # - name: Run main.py
-    #   run: |
-    #     for i in $(find . -type f -name main.py)
-    #     do
-    #       echo "Testing ${i}"
-    #       python ${i}
-    #     done
+        pip install -r requirements/all.txt
+    - name: Run main.py
+      run: |
+        for i in $(find . -type f -name main.py)
+        do
+          echo "Testing ${i}"
+          python ${i}
+        done
