@@ -9,17 +9,35 @@ concurrency:
 jobs:
   main:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9"]
+        pl-release: ["stable", "master"]
+        torch-release: ["lts", "stable"]
     steps:
-    - name: Checkout
-      uses: actions/checkout@v2
-    - name: Set up Python 3.9
-      uses: actions/setup-python@v2
-      with:
-        python-version: 3.9
+    - uses: actions/checkout@v3
+    - uses: conda-incubator/setup-miniconda@v2
+            with:
+              auto-update-conda: true
+              python-version: ${{ matrix.python-version }}
+              activate-environment: test
+    # - name: Install PyTorch
+    #   run: |
+    #     conda install pytorch torchvision cpuonly -c pytorch-lts
+    #     conda install pytorch torchvision cpuonly -c pytorch
+    #     conda install pytorch torchvision cpuonly -c pytorch-nightly
+    #     python -c "import torch; print(torch.__version__)"
     - name: Install dependencies
       run: |
-        python -m pip install -U pip
-        pip install -r requirements/all.txt -f https://download.pytorch.org/whl/cpu/torch_stable.html
+        which python pip conda
+        python --version
+        pip --version
+        conda info
+        conda list
+        conda install pytorch torchvision cpuonly -c pytorch-lts
+        python -c "import torch; print(torch.__version__)"
+        pip install -r requirements/all.txt
     - name: Run main.py
       run: |
         for i in $(find . -type f -name main.py)
