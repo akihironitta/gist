@@ -30,6 +30,7 @@ jobs:
     #     python -c "import torch; print(torch.__version__)"
     - name: Install dependencies
       run: |
+        conda info -e
         which python pip conda
         python --version
         pip --version
