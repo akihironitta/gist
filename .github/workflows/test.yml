@@ -33,15 +33,18 @@ jobs:
         which python pip conda
         python --version
         pip --version
+        pip list
         conda info
         conda list
         conda install pytorch torchvision cpuonly -c pytorch-lts
+        conda list
+        pip list
         python -c "import torch; print(torch.__version__)"
-        pip install -r requirements/all.txt
-    - name: Run main.py
-      run: |
-        for i in $(find . -type f -name main.py)
-        do
-          echo "Testing ${i}"
-          python ${i}
-        done
+        # pip install -r requirements/all.txt
+    # - name: Run main.py
+    #   run: |
+    #     for i in $(find . -type f -name main.py)
+    #     do
+    #       echo "Testing ${i}"
+    #       python ${i}
+    #     done
