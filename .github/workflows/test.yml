@@ -19,7 +19,9 @@ jobs:
     - uses: actions/checkout@v3
     - uses: conda-incubator/setup-miniconda@v2
       with:
+        miniconda-version: latest
         auto-update-conda: true
+        auto-activate-base: true
         python-version: ${{ matrix.python-version }}
     # - name: Install PyTorch
     #   run: |
@@ -27,6 +29,11 @@ jobs:
     #     conda install pytorch torchvision cpuonly -c pytorch
     #     conda install pytorch torchvision cpuonly -c pytorch-nightly
     #     python -c "import torch; print(torch.__version__)"
+    - name: Bash
+      shell: bash -l {0}
+      run: |
+        conda info
+        conda list
     - name: Install dependencies
       run: |
         conda info -e
