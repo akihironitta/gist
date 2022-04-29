@@ -21,7 +21,6 @@ jobs:
       with:
         auto-update-conda: true
         python-version: ${{ matrix.python-version }}
-        activate-environment: test
     # - name: Install PyTorch
     #   run: |
     #     conda install pytorch torchvision cpuonly -c pytorch-lts
