@@ -28,13 +28,13 @@ jobs:
         activate-environment: test
         auto-update-conda: true
     - name: Install PyTorch (stable)
-      if: ${{ matrix.torch-release }} == stable
+      if: matrix.torch-release == stable
       run: conda install pytorch torchvision cpuonly -c pytorch
     - name: Install PyTorch (lts)
-      if: ${{ matrix.torch-release }} == lts
+      if: matrix.torch-release == lts
       run: conda install pytorch torchvision cpuonly -c pytorch-lts
     - name: Install PyTorch (nightly)
-      if: ${{ matrix.torch-release }} == nightly
+      if: matrix.torch-release == nightly
       run: conda install pytorch torchvision cpuonly -c pytorch-nightly
     - name: Install dependencies
       run: |
