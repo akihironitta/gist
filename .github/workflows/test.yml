@@ -36,7 +36,7 @@ jobs:
         pip list
         conda info
         conda list
-        conda install pytorch torchvision cpuonly -c pytorch-lts
+        conda install -q -y pytorch torchvision cpuonly -c pytorch-lts
         conda list
         pip list
         python -c "import torch; print(torch.__version__)"
