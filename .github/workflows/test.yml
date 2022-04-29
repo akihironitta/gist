@@ -29,8 +29,8 @@ jobs:
         auto-update-conda: true
     - name: Install PyTorch ${{ matrix.torch-release }}
       run: |
-        PYTORCH_CHANNEL=matrix.torch-release
-        [ matrix.torch-release == 'stable' ] && PYTORCH_CHANNEL=''
+        PYTORCH_CHANNEL=pytorch-${{ matrix.torch-release }}
+        [ ${{ matrix.torch-release }} == 'stable' ] && PYTORCH_CHANNEL='pytorch'
         conda install -q pytorch torchvision cpuonly -c $PYTORCH_CHANNEL
     - name: Install dependencies
       run: |
