@@ -35,7 +35,6 @@ jobs:
     - name: Install dependencies
       run: |
         pip install -r requirements/all.txt
-
     - name: Show environment
         python --version
         pip list
