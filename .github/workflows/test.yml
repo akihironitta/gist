@@ -36,6 +36,7 @@ jobs:
       run: |
         pip install -r requirements/all.txt
     - name: Show environment
+      run: |
         python --version
         pip list
         conda info
