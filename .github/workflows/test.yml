@@ -27,7 +27,7 @@ jobs:
         miniconda-version: latest
         activate-environment: test
         auto-update-conda: true
-    - name: Install PyTorch ${{ matrix.torch-release }}
+    - name: Install PyTorch (${{ matrix.torch-release }})
       run: |
         PYTORCH_CHANNEL=pytorch-${{ matrix.torch-release }}
         [ ${{ matrix.torch-release }} == 'stable' ] && PYTORCH_CHANNEL='pytorch'
@@ -35,6 +35,12 @@ jobs:
     - name: Install dependencies
       run: |
         pip install -r requirements/all.txt
+
+    - name: Show environment
+        python --version
+        pip list
+        conda info
+        conda list
     - name: Run main.py
       run: |
         for i in $(find . -type f -name main.py)
