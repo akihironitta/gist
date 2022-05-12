@@ -44,20 +44,26 @@ class BoringModel(LightningModule):
 def main():
     train_data = DataLoader(RandomDataset(32, 64), batch_size=2)
     val_data = DataLoader(RandomDataset(32, 64), batch_size=2)
-    test_data = DataLoader(RandomDataset(32, 64), batch_size=2)
 
-    model = BoringModel()
-    trainer = Trainer(
-        max_epochs=1,
-        accelerator="auto",
-        devices="auto",
-        enable_progress_bar=False,
-        enable_model_summary=False,
-        enable_checkpointing=False,
-        logger=False,
+    model0 = BoringModel()
+    trainer0 = Trainer(max_epochs=1)
+    trainer0.fit(
+        model0, train_dataloaders=train_data, val_dataloaders=val_data
     )
-    trainer.fit(model, train_dataloaders=train_data, val_dataloaders=val_data)
-    trainer.test(model, dataloaders=test_data)
+    checkpoint_path = "example.ckpt"
+    trainer0.save_checkpoint(checkpoint_path)
+
+    trainer1 = Trainer(max_epochs=1)
+    model1 = BoringModel()
+    trainer1.fit(
+        model1,
+        train_dataloaders=train_data,
+        val_dataloaders=val_data,
+        ckpt_path=checkpoint_path,
+    )
+    old_state = trainer0.optimizers[0].state
+    new_state = trainer1.optimizers[0].state
+    print(old_state, new_state)
 
 
 if __name__ == "__main__":
