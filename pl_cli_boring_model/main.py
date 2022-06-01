@@ -54,10 +54,6 @@ def main():
         max_epochs=1,
         accelerator="auto",
         devices="auto",
-        enable_progress_bar=False,
-        enable_model_summary=False,
-        enable_checkpointing=False,
-        logger=False,
     )
     cli = LightningCLI(
         BoringModel,
@@ -65,6 +61,8 @@ def main():
         save_config_callback=None,
         run=False,
     )
+    print("cli.trainer.callbacks: ", cli.trainer.callbacks)
+    print("len(cli.trainer.callbacks): ", len(cli.trainer.callbacks))
     cli.trainer.fit(cli.model)
 
 
