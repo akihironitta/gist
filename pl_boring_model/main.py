@@ -38,7 +38,9 @@ class BoringModel(LightningModule):
         self.log("test_loss", loss)
 
     def configure_optimizers(self):
-        return torch.optim.SGD(self.layer.parameters(), lr=0.1)
+        optimizer = torch.optim.SGD(self.layer.parameters(), lr=0.1)
+        lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=1)
+        return [optimizer], [lr_scheduler]
 
 
 def main():
@@ -55,6 +57,7 @@ def main():
         enable_model_summary=False,
         enable_checkpointing=False,
         logger=False,
+        benchmark=False,  # enabled by default in 1.6.{0-3}.
     )
     trainer.fit(model, train_dataloaders=train_data, val_dataloaders=val_data)
     trainer.test(model, dataloaders=test_data)
