@@ -180,7 +180,17 @@ class GAN(LightningModule):
         opt_d = Adam(
             self.discriminator.parameters(), lr=0.0002, betas=(0.5, 0.999)
         )
-        return [opt_g, opt_d]
+        lr_scheduler_config = {
+            "scheduler": torch.optim.lr_scheduler.StepLR(
+                opt_g, step_size=10, gamma=0.9
+            ),
+            "interval": "step",
+            "frequency": 1,
+            "monitor": "val_loss",
+            "strict": True,
+            "name": None,
+        }
+        return [opt_g, opt_d], [lr_scheduler_config]
 
     def on_epoch_end(self):
         if self.logger:
@@ -197,12 +207,13 @@ def main():
     dm = MNISTDataModule()
     trainer = Trainer(
         max_epochs=1,
-        accelerator="auto",
-        devices="auto",
+        accelerator="cpu",
+        devices=1,
         enable_progress_bar=False,
         enable_model_summary=False,
         enable_checkpointing=False,
         logger=False,
+        profiler="simple",
     )
     trainer.fit(model, datamodule=dm)
 
