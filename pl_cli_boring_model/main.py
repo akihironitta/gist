@@ -47,9 +47,11 @@ class BoringModel(LightningModule):
     def val_dataloader(self):
         return DataLoader(RandomDataset(32, 64), batch_size=2)
 
+    def test_dataloader(self):
+        return DataLoader(RandomDataset(32, 64), batch_size=2)
+
 
 def main():
-
     trainer_defaults = dict(
         max_epochs=1,
         accelerator="auto",
@@ -63,6 +65,7 @@ def main():
         run=False,
     )
     cli.trainer.fit(cli.model)
+    cli.trainer.test(cli.model)
 
 
 if __name__ == "__main__":
