@@ -52,6 +52,11 @@ jobs:
           conda info
           conda list
       - name: Run main.py
+        env:
+          PL_TRAINER_ENABLE_MODEL_SUMMARY: 0
+          PL_TRAINER_ENABLE_PROGRESS_BAR: 0
+          PL_TRAINER_ENABLE_CHECKPOINTING: 0
+          PL_TRAINER_LOGGER: 0
         run: |
           for i in $(find . -type f -name main.py)
           do
