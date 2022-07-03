@@ -5,15 +5,11 @@ on:
     - cron: "0 0 * * *"
   push:
     branches:
-      - master
-      - 'ci/**'
+      - main
+      - "ci/**"
   pull_request:
     branches:
-      - master
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.head_ref }}
-  cancel-in-progress: true
+      - main
 
 jobs:
   main:
@@ -29,29 +25,37 @@ jobs:
       run:
         shell: bash -l {0}
     steps:
-    - uses: actions/checkout@v3
-    - uses: conda-incubator/setup-miniconda@v2
-      with:
-        python-version: ${{ matrix.python-version }}
-        miniconda-version: latest
-        activate-environment: test
-        auto-update-conda: true
-    - name: Install dependencies
-      run: |
-        # Install PyTorch
-        conda install -q pytorch torchvision cpuonly -c ${{ matrix.torch-conda-channel }}
-        # Install PyTorch Lightning
-        pip install -q 'https://github.com/PyTorchLightning/pytorch-lightning/archive/${{ matrix.pl-branch }}.zip'
-    - name: Show environment
-      run: |
-        python --version
-        pip list
-        conda info
-        conda list
-    - name: Run main.py
-      run: |
-        for i in $(find . -type f -name main.py)
-        do
-          echo "Testing ${i}"
-          python ${i}
-        done
+      - uses: actions/checkout@v3
+      - uses: conda-incubator/setup-miniconda@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+          miniconda-version: latest
+          activate-environment: test
+          auto-update-conda: true
+      - name: Install dependencies
+        run: |
+          # Install PyTorch
+          conda install -q pytorch torchvision cpuonly -c ${{ matrix.torch-conda-channel }}
+          # Install PyTorch Lightning
+          pip install -q 'https://github.com/PyTorchLightning/pytorch-lightning/archive/${{ matrix.pl-branch }}.zip'
+          # Install other dependencies
+          grep -v -e pytorch-lightning -e torchvision requirements.txt > new_requirements.txt
+          pip install -r new_requirements.txt
+      - name: Show environment
+        run: |
+          python --version
+          pip list
+          conda info
+          conda list
+      - name: Run main.py
+        env:
+          PL_TRAINER_ENABLE_MODEL_SUMMARY: 0
+          PL_TRAINER_ENABLE_PROGRESS_BAR: 0
+          PL_TRAINER_ENABLE_CHECKPOINTING: 0
+          PL_TRAINER_LOGGER: 0
+        run: |
+          for i in $(find . -type f -name main.py)
+          do
+            echo "Testing ${i}"
+            python ${i}
+          done

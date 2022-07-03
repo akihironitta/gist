@@ -53,11 +53,7 @@ def main():
         max_epochs=1,
         accelerator="auto",
         devices="auto",
-        enable_progress_bar=False,
-        enable_model_summary=False,
-        enable_checkpointing=False,
-        logger=False,
-        benchmark=False,  # enabled by default in 1.6.{0-3}.
+        benchmark=False,  # True by default in 1.6.{0-3}.
     )
     trainer.fit(model, train_dataloaders=train_data, val_dataloaders=val_data)
     trainer.test(model, dataloaders=test_data)

@@ -37,12 +37,13 @@ class BoringModel(LightningModule):
         return torch.optim.SGD(self.layer.parameters(), lr=0.1)
 
 
-len_a = 10
-len_b = 6
-mode = "min_size"
+class RandomDataModule(LightningDataModule):
+    def __init__(
+        self, mode: str = "min_size", len_a: int = 10, len_b: int = 6
+    ) -> None:
+        super().__init__()
+        self.save_hyperparameters()
 
-
-class MyData(LightningDataModule):
     def train_dataloader(self):
         # Training data has 10 batches in max_size_cycle model, and 6 in
         # min_size mode. Training should run oder 5 resp. 3 steps because we
@@ -50,37 +51,41 @@ class MyData(LightningDataModule):
         # GPU sees all the data.
         return CombinedLoader(
             {
-                "a": DataLoader(RandomDataset(32, len_a), batch_size=1),
-                "b": DataLoader(RandomDataset(32, len_b), batch_size=1),
+                "a": DataLoader(
+                    RandomDataset(32, self.hparams.len_a), batch_size=1
+                ),
+                "b": DataLoader(
+                    RandomDataset(32, self.hparams.len_b), batch_size=1
+                ),
             },
-            mode=mode,
+            mode=self.hparams.mode,
         )
 
     def val_dataloader(self):
         return CombinedLoader(
             {
-                "a": DataLoader(RandomDataset(32, len_a), batch_size=1),
-                "b": DataLoader(RandomDataset(32, len_b), batch_size=1),
+                "a": DataLoader(
+                    RandomDataset(32, self.hparams.len_a), batch_size=1
+                ),
+                "b": DataLoader(
+                    RandomDataset(32, self.hparams.len_b), batch_size=1
+                ),
             },
-            mode=mode,
+            mode=self.hparams.mode,
         )
 
 
-def run():
-
+def main():
     model = BoringModel()
-    dm = MyData()
+    dm = RandomDataModule()
     trainer = Trainer(
         max_epochs=1,
         accelerator="auto",
         devices="auto",
-        enable_progress_bar=False,
-        enable_model_summary=False,
-        enable_checkpointing=False,
-        logger=False,
+        benchmark=False,  # True by default in 1.6.{0-3}.
     )
-    trainer.fit(model, datamodule=dm)
+    trainer.fit(model, dm)
 
 
 if __name__ == "__main__":
-    run()
+    main()

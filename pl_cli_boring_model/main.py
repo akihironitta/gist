@@ -1,5 +1,5 @@
 # https://github.com/PyTorchLightning/pytorch-lightning/blob/fe34bf2a653ebd50e6a3a00be829e3611f820c3c/pl_examples/bug_report/bug_report_model.py
-from pytorch_lightning import LightningModule, Trainer
+from pytorch_lightning import LightningModule
 from pytorch_lightning.utilities.cli import LightningCLI
 import torch
 from torch.utils.data import DataLoader, Dataset
@@ -47,17 +47,16 @@ class BoringModel(LightningModule):
     def val_dataloader(self):
         return DataLoader(RandomDataset(32, 64), batch_size=2)
 
+    def test_dataloader(self):
+        return DataLoader(RandomDataset(32, 64), batch_size=2)
+
 
 def main():
-
     trainer_defaults = dict(
         max_epochs=1,
         accelerator="auto",
         devices="auto",
-        enable_progress_bar=False,
-        enable_model_summary=False,
-        enable_checkpointing=False,
-        logger=False,
+        benchmark=False,  # True by default in 1.6.{0-3}.
     )
     cli = LightningCLI(
         BoringModel,
@@ -66,6 +65,7 @@ def main():
         run=False,
     )
     cli.trainer.fit(cli.model)
+    cli.trainer.test(cli.model)
 
 
 if __name__ == "__main__":

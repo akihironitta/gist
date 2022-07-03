@@ -5,3 +5,4 @@ clean:
 	rm -rf _ckpt_*
 	rm -rf .mypy_cache
 	rm -rf .pytest_cache
+	rm -rf checkpoints
