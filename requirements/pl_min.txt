@@ -1,2 +1,0 @@
-torch>=1.11
-git+https://github.com/PyTorchLightning/pytorch-lightning.git@master
