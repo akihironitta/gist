@@ -42,6 +42,9 @@ jobs:
           conda install -q pytorch torchvision cpuonly -c ${{ matrix.torch-conda-channel }}
           # Install PyTorch Lightning
           pip install -q 'https://github.com/PyTorchLightning/pytorch-lightning/archive/${{ matrix.pl-branch }}.zip'
+          # Install other dependencies
+          grep -v -e pytorch-lightning -e torchvision requirements.txt > new_requirements.txt
+          pip install -r new_requirements.txt
       - name: Show environment
         run: |
           python --version
