@@ -53,6 +53,7 @@ def main():
         max_epochs=1,
         accelerator="auto",
         devices="auto",
+        strategy="ddp",
         benchmark=False,  # True by default in 1.6.{0-3}.
     )
     trainer.fit(model, train_dataloaders=train_data, val_dataloaders=val_data)
