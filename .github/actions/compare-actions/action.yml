@@ -4,10 +4,15 @@ name: Compare actions
 
 description: Compare actions' environments and show their diff
 
+inputs:
+  token:
+    description: 'GitHub token'
+    required: true
+
 runs:
   using: composite
   steps:
     - run: gh pr comment $PULL_REQUEST --body "Hi!"
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ inputs.token }}
         PULL_REQUEST: ${{ github.event.pull_request.html_url }}
