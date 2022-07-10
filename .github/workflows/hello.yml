@@ -1,0 +1,12 @@
+name: Say hello
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  track_pr:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: ./.github/actions/compare-actions

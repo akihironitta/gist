@@ -1,0 +1,13 @@
+# Using GitHub CLI in workflows
+# https://docs.github.com/en/actions/using-workflows/using-github-cli-in-workflows
+name: Compare actions
+
+description: Compare actions' environments and show their diff
+
+runs:
+  using: composite
+  steps:
+    - run: gh pr comment $PULL_REQUEST --body "Hi!"
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        PULL_REQUEST: ${{ github.event.pull_request.html_url }}
