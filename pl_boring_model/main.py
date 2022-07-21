@@ -40,7 +40,7 @@ class BoringModel(LightningModule):
     def optimizer_step(self, epoch, batch_idx, optimizer, optimizer_idx, optimizer_closure, **kwargs):
         self.should_skip_lr_scheduler_step = False
 
-        scaler = getattr(self.trainer.strategy.precision_plugin, "scaler", None)
+        scaler = getattr(self.trainer.precision_plugin, "scaler", None)
         if scaler:
             scale_before_step = scaler.get_scale()
 
@@ -72,10 +72,9 @@ def main():
 
     model = BoringModel()
     trainer = Trainer(
-        max_steps=5,
         max_epochs=1,
         accelerator="gpu",
-        devices=1,
+        devices="auto",
         precision=16,
     )
     trainer.fit(model, train_dataloaders=train_data, val_dataloaders=val_data)
