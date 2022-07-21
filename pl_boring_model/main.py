@@ -33,10 +33,6 @@ class BoringModel(LightningModule):
         loss = self(batch).sum()
         self.log("valid_loss", loss)
 
-    def test_step(self, batch, batch_idx):
-        loss = self(batch).sum()
-        self.log("test_loss", loss)
-
     def configure_optimizers(self):
         optimizer = torch.optim.SGD(self.layer.parameters(), lr=0.1)
         lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=1)
@@ -46,17 +42,14 @@ class BoringModel(LightningModule):
 def main():
     train_data = DataLoader(RandomDataset(32, 64), batch_size=2)
     val_data = DataLoader(RandomDataset(32, 64), batch_size=2)
-    test_data = DataLoader(RandomDataset(32, 64), batch_size=2)
 
     model = BoringModel()
     trainer = Trainer(
         max_epochs=1,
-        accelerator="auto",
-        devices="auto",
-        benchmark=False,  # True by default in 1.6.{0-3}.
+        track_grad_norm=2,
+        log_every_n_steps=1,
     )
     trainer.fit(model, train_dataloaders=train_data, val_dataloaders=val_data)
-    trainer.test(model, dataloaders=test_data)
 
 
 if __name__ == "__main__":
