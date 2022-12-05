@@ -85,3 +85,4 @@ timit_data/
 venv/
 wandb
 wheels/
+.lightning
