@@ -37,10 +37,16 @@ class GDELTLite(torch_geometric.datasets.icews.EventDataset):
         print("x", x.size())
         edge_attr = torch.load(f"{self.processed_dir}/edge_features.pt")
         print("edge_attr", edge_attr.size())
-
         df = pd.read_csv(f"{self.processed_dir}/edges.csv")
-
         print("df", df)
+
+        self.data = torch_geometric.data.Data(
+            x=x,  # [num_nodes, 413]
+            edge_index=edge_index,  # [2, num_edges]
+            edge_attr=edge_attr,  # [num_edges, 186]
+            edge_timestamp=timestamp,  # [num_edges,]
+        )
+        print(self.data)
 
     @property
     def num_nodes(self) -> int:
@@ -82,6 +88,8 @@ class GDELTLite(torch_geometric.datasets.icews.EventDataset):
             )
 
     def process(self):
+        # code adapted from:
+        # https://github.com/CongWeilin/GraphMixer/blob/bbdd9923706a02d0619dfd00ef7880911f003a65/DATA/GDELT_lite/gen_dataset.py
         df = pd.read_csv(f"{self.raw_dir}/edges.csv")
 
         # GDELTLite is 1/100 of the original GDELT
@@ -108,6 +116,8 @@ class GDELTLite(torch_geometric.datasets.icews.EventDataset):
         # create node features
         node_feats = torch.load(f"{self.raw_dir}/node_features.pt")
         torch.save(node_feats, f"{self.processed_dir}/node_features.pt")
+
+        # TODO: Create a pyg.data.Data object and save it into a single file `data.pt`
 
 
 dataset = GDELTLite(root="./")
