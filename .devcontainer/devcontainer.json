@@ -22,8 +22,10 @@
             "installZsh": true,
             "configureZshAsDefaultShell": true,
             "installOhMyZsh": true,
-            "upgradePackages": false
-        }
+            "upgradePackages": true
+        },
+        "ghcr.io/devcontainers/features/aws-cli:1": {},
+        "ghcr.io/devcontainers/features/github-cli:1": {}
     },
     "postCreateCommand": {
         // "installTorch": "pip install torch torchvision --index-url https://download.pytorch.org/whl/cu118",
