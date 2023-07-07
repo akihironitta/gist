@@ -1,5 +1,6 @@
 # https://github.com/PyTorchLightning/pytorch-lightning/blob/fe34bf2a653ebd50e6a3a00be829e3611f820c3c/pl_examples/bug_report/bug_report_model.py
-from pytorch_lightning import LightningModule, Trainer
+from pytorch_lightning import LightningModule, Trainer, LightningDataModule
+
 import torch
 from torch.utils.data import DataLoader, Dataset
 
@@ -16,6 +17,32 @@ class RandomDataset(Dataset):
         return self.len
 
 
+class MyDataModule(LightningDataModule):
+    def __init__(self):
+        super().__init__()
+        pass
+
+    def train_dataloader(self):
+        dataset = RandomDataset(32, 64)
+        sampler = torch.utils.data.RandomSampler(dataset)
+        return DataLoader(
+            dataset,
+            batch_sampler=torch.utils.data.BatchSampler(
+                sampler, batch_size=2, drop_last=False
+            ),
+        )
+
+    def val_dataloader(self):
+        dataset = RandomDataset(32, 64)
+        sampler = torch.utils.data.RandomSampler(dataset)
+        return DataLoader(
+            dataset,
+            batch_sampler=torch.utils.data.BatchSampler(
+                sampler, batch_size=2, drop_last=False
+            ),
+        )
+
+
 class BoringModel(LightningModule):
     def __init__(self):
         super().__init__()
@@ -30,6 +57,7 @@ class BoringModel(LightningModule):
         return {"loss": loss}
 
     def validation_step(self, batch, batch_idx):
+        print("asdfasdfasdfasdfasdf")
         loss = self(batch).sum()
         self.log("valid_loss", loss)
 
@@ -44,10 +72,6 @@ class BoringModel(LightningModule):
 
 
 def main():
-    train_data = DataLoader(RandomDataset(32, 64), batch_size=2)
-    val_data = DataLoader(RandomDataset(32, 64), batch_size=2)
-    test_data = DataLoader(RandomDataset(32, 64), batch_size=2)
-
     model = BoringModel()
     trainer = Trainer(
         max_epochs=1,
@@ -55,8 +79,8 @@ def main():
         devices="auto",
         benchmark=False,  # True by default in 1.6.{0-3}.
     )
-    trainer.fit(model, train_dataloaders=train_data, val_dataloaders=val_data)
-    trainer.test(model, dataloaders=test_data)
+    data = MyDataModule()
+    trainer.fit(model, data)
 
 
 if __name__ == "__main__":
