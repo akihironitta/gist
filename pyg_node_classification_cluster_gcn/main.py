@@ -44,29 +44,27 @@ class GAT(torch.nn.Module):
 
 
 def main():
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     dataset = Planetoid(
         root="data/PubMed",
         name="PubMed",
         transform=NormalizeFeatures(),
     )
-    data = dataset[0]  # on CPU
+    data = dataset[0]
     cluster_data = ClusterData(data, num_parts=128)
     loader = ClusterLoader(cluster_data, batch_size=32, shuffle=True)
-    # model = GCN(
-    #     dataset.num_features,
-    #     dataset.num_classes,
-    # )
-    model = GAT(dataset.num_features, dataset.num_classes)
+    # model = GCN(dataset.num_features, dataset.num_classes).to(device)
+    model = GAT(dataset.num_features, dataset.num_classes).to(device)
     criterion = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(
         model.parameters(),
         lr=0.01,
         weight_decay=5e-4,
     )
-
     model.train()
     for _ in range(50):
         for data in loader:
+            data.to(device)
             optimizer.zero_grad()
             out = model(data.x, data.edge_index)
             loss = criterion(out[data.train_mask], data.y[data.train_mask])
