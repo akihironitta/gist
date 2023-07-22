@@ -8,8 +8,7 @@
                 "ms-python.vscode-pylance",
                 "ms-python.isort",
                 "ms-python.black-formatter",
-                "ms-python.flake8",
-                "streetsidesoftware.code-spell-checker"
+                "ms-python.flake8"
             ]
         }
     },
@@ -23,6 +22,10 @@
             "configureZshAsDefaultShell": true,
             "installOhMyZsh": true,
             "upgradePackages": false
+        },
+        "ghcr.io/devcontainers/features/github-cli:1": {},
+        "ghcr.io/devcontainers/features/sshd:1": {
+            "version": "latest"
         }
     },
     "postCreateCommand": {
