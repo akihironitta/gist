@@ -25,7 +25,10 @@
             "upgradePackages": true
         },
         "ghcr.io/devcontainers/features/aws-cli:1": {},
-        "ghcr.io/devcontainers/features/github-cli:1": {}
+        "ghcr.io/devcontainers/features/github-cli:1": {},
+        "ghcr.io/devcontainers/features/sshd:1": {
+            "version": "latest"
+        }
     },
     "postCreateCommand": {
         // "installTorch": "pip install torch torchvision --index-url https://download.pytorch.org/whl/cu118",
