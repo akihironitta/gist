@@ -9,7 +9,7 @@
                 "ms-python.isort",
                 "ms-python.black-formatter",
                 "ms-python.flake8",
-                "streetsidesoftware.code-spell-checker"
+                "EditorConfig.EditorConfig"
             ]
         }
     },
@@ -24,7 +24,6 @@
             "installOhMyZsh": true,
             "upgradePackages": true
         },
-        "ghcr.io/devcontainers/features/aws-cli:1": {},
         "ghcr.io/devcontainers/features/github-cli:1": {},
         "ghcr.io/devcontainers/features/sshd:1": {
             "version": "latest"
