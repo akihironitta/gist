@@ -1,14 +1,9 @@
 import torch
-from torch.nn import Linear, ReLU
 
-from torch_geometric.loader import LinkNeighborLoader
+
+import torch_geometric
 from torch_geometric.datasets import GDELTLite
 from torch_geometric.nn.models.graph_mixer import LinkEncoder, NodeEncoder
-from torch_geometric.utils.num_nodes import maybe_num_nodes
-
-
-class _LinkClassifier(torch.nn.Module):
-    pass
 
 
 class GraphMixer(torch.nn.Module):
@@ -53,20 +48,16 @@ class GraphMixer(torch.nn.Module):
         # [num_pos_pairs + num_neg_pairs, 1]
         out = self.link_classifier(
             feats,
-            # + some_index to specify which pairs are being predicted
         )
 
         return out
 
 
 def main():
-    # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    torch.set_default_device("cpu")  # or cuda
+
+    # TODO: Modify GDELTLite to have the default splits
     data = GDELTLite("./")[0]
-    print(data)
-    a = torch.LongTensor([0, 1])
-    for i in range(len(data.edge_index[0])):
-        if all(data.edge_index[:, i] == a):
-            print(i, data.time[i])
 
     # loader = LinkNeighborLoader(
     #     data,
@@ -78,11 +69,14 @@ def main():
     #     batch_size=128,
     #     shuffle=False,
     # )
-    # print(data.time)
-    # for sampled_data in loader:
-    #     print(data)
-    #     print(sampled_data)
-    #     break
+    train_loader = torch_geometric.loader.TemporalDataLoader()
+    val_loader = torch_geometric.loader.TemporalDataLoader()
+    train_loader = torch_geometric.loader.TemporalDataLoader()
+
+    model = GraphMixer()
+
+    for sampled_data in train_loader:
+
 
 
 def test_graph_mixer():
