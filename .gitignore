@@ -86,3 +86,6 @@ venv/
 wandb
 wheels/
 .lightning
+raw/
+data/
+processed/
