@@ -28,6 +28,7 @@ KNOWN_ERRORS = {
     "cuda.so: cannot open shared object file: No such file or directory": "",
     "Not compiled with METIS support": "WITH_METIS=1 pip install package",
     "object has no attribute sparse_csc_tensor": "",
+    "OSError: /lib/x86_64-linux-gnu/libm.so.6: version `GLIBC_2.27' not found (required by /usr/local/lib/python3.7/site-packages/torch_spline_conv/_basis_cuda.so)": "",
 }
 
 
