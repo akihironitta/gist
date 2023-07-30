@@ -1,3 +1,9 @@
+"""
+TODO
+- [ ] Make sure each sample doesn't include edges from the future
+- [ ]
+"""
+
 from rich.console import Console
 from rich.table import Table
 import torch
@@ -8,6 +14,8 @@ from torch_geometric.loader import LinkNeighborLoader, NeighborLoader
 from torch_geometric.nn.models.graph_mixer import LinkEncoder, NodeEncoder
 import torch_geometric.transforms as T
 from torch_geometric.utils import to_undirected
+from tqdm import tqdm
+
 
 HIDE_TENSOR = False
 
@@ -124,7 +132,15 @@ class GraphMixer(torch.nn.Module):
             (link_encoder_out_channels + num_node_feats) * 2, 1
         )
 
-    def forward(self, x, edge_index, edge_attr, edge_time, seed_time, data):
+    def forward(
+        self,
+        x,
+        edge_index,
+        edge_attr,
+        edge_time,
+        seed_time,
+        edge_label_index,
+    ):
         # [num_nodes, link_encoder_out_channels]
         link_feat = self.link_encoder(
             edge_index,
@@ -146,9 +162,9 @@ class GraphMixer(torch.nn.Module):
 
         # TODO: Filter out non-root nodes earlier than here if possible
         # [batch_size, dim]
-        feats_src = feats[data.edge_label_index[0]]
+        feats_src = feats[edge_label_index[0]]
         # [batch_size, dim]
-        feats_dst = feats[data.edge_label_index[1]]
+        feats_dst = feats[edge_label_index[1]]
         feat_pairs = torch.cat([feats_src, feats_dst], dim=-1)
 
         # [batch_size, 1]
@@ -171,9 +187,8 @@ def main():
         edge_label=torch.ones(data.num_edges),
         time_attr="edge_time",
         edge_label_time=data.edge_time,
-        # edge_label_index=data.edge_index,
         batch_size=13,
-        shuffle=False,
+        shuffle=True,
     )
     model = GraphMixer(
         num_node_feats=data.x.size(1),
@@ -182,8 +197,9 @@ def main():
     optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
 
     for _ in range(100):
+        train_loss = 0.0
         model.train()
-        for sampled_data in loader:
+        for sampled_data in tqdm(loader):
             # sampled_data: num_edges == batch_size * K
             describe_data(sampled_data)
             optimizer.zero_grad()
@@ -193,18 +209,18 @@ def main():
                 sampled_data.edge_attr.to(torch.float),
                 sampled_data.edge_time.to(torch.float),
                 sampled_data.edge_label_time,
-                sampled_data,  # FIXME: REMOVE
+                sampled_data.edge_label_index,
             )
-            print(sampled_data)
-            print(pred.size(), sampled_data.edge_label.size())
             loss = F.binary_cross_entropy_with_logits(
                 pred,
                 sampled_data.edge_label,
             )
             loss.backward()
             optimizer.step()
+            train_loss += loss.item()
             print(loss.item())
             break
+        break
 
 
 if __name__ == "__main__":
