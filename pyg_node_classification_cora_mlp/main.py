@@ -4,7 +4,6 @@ import torch.nn.functional as F
 from torch_geometric.datasets import Planetoid
 from torch_geometric.transforms import NormalizeFeatures
 
-
 class MLP(torch.nn.Module):
     def __init__(self, num_features, num_classes, hidden_channels=16):
         super().__init__()
