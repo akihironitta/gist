@@ -6,11 +6,14 @@ HPU available: False, using: 0 HPUs
 LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0]
 /home/aki/miniconda3/envs/oss310/lib/python3.10/site-packages/pytorch_lightning/trainer/connectors/data_connector.py:424: The 'train_dataloader' does not have many workers which may be a bottleneck. Consider increasing the value of the `num_workers` argument` to `num_workers=15` in the `DataLoader` to improve performance.
 /home/aki/miniconda3/envs/oss310/lib/python3.10/site-packages/pytorch_lightning/loops/fit_loop.py:298: The number of training batches (8) is smaller than the logging interval Trainer(log_every_n_steps=50). Set a lower value for log_every_n_steps if you want to see logs for the training epoch.
-W0710 18:36:15.968000 140004033020544 torch/_logging/_internal.py:1034] [1/0] Profiler function <class 'torch.autograd.profiler.record_function'> will be ignored
-V0710 18:36:18.651000 140004033020544 torch/_dynamo/guards.py:2611] [4/1] [__recompiles] Recompiling function _call_strategy_hook in /home/aki/miniconda3/envs/oss310/lib/python3.10/site-packages/pytorch_lightning/trainer/call.py:294
-V0710 18:36:18.651000 140004033020544 torch/_dynamo/guards.py:2611] [4/1] [__recompiles]     triggered by the following guard failure(s):
-V0710 18:36:18.651000 140004033020544 torch/_dynamo/guards.py:2611] [4/1] [__recompiles]     - L['hook_name'] == 'training_step'
-V0710 18:36:18.658000 140004033020544 torch/_dynamo/guards.py:2611] [5/1] [__recompiles] Recompiling function torch_dynamo_resume_in__call_strategy_hook_at_300 in /home/aki/miniconda3/envs/oss310/lib/python3.10/site-packages/pytorch_lightning/trainer/call.py:300
-V0710 18:36:18.658000 140004033020544 torch/_dynamo/guards.py:2611] [5/1] [__recompiles]     triggered by the following guard failure(s):
-V0710 18:36:18.658000 140004033020544 torch/_dynamo/guards.py:2611] [5/1] [__recompiles]     - L['hook_name'] == 'training_step'
+W0710 18:14:13.417000 140121105339008 torch/_logging/_internal.py:1013] [1/0] Profiler function <class 'torch.autograd.profiler.record_function'> will be ignored
+V0710 18:14:16.882000 140121105339008 torch/_dynamo/guards.py:1425] [__recompiles] Recompiling function _call_strategy_hook in /home/aki/miniconda3/envs/oss310/lib/python3.10/site-packages/pytorch_lightning/trainer/call.py:294
+V0710 18:14:16.882000 140121105339008 torch/_dynamo/guards.py:1425] [__recompiles]     triggered by the following guard failure(s):
+V0710 18:14:16.882000 140121105339008 torch/_dynamo/guards.py:1425] [__recompiles]     - L['hook_name'] == 'training_step'
+V0710 18:14:16.891000 140121105339008 torch/_dynamo/guards.py:1425] [__recompiles] Recompiling function torch_dynamo_resume_in__call_strategy_hook_at_300 in /home/aki/miniconda3/envs/oss310/lib/python3.10/site-packages/pytorch_lightning/trainer/call.py:300
+V0710 18:14:16.891000 140121105339008 torch/_dynamo/guards.py:1425] [__recompiles]     triggered by the following guard failure(s):
+V0710 18:14:16.891000 140121105339008 torch/_dynamo/guards.py:1425] [__recompiles]     - L['hook_name'] == 'training_step'
+V0710 18:14:19.659000 140121105339008 torch/_dynamo/guards.py:1425] [__recompiles] Recompiling function torch_dynamo_resume_in_step_at_148 in /home/aki/miniconda3/envs/oss310/lib/python3.10/site-packages/torch/optim/adam.py:148
+V0710 18:14:19.659000 140121105339008 torch/_dynamo/guards.py:1425] [__recompiles]     triggered by the following guard failure(s):
+V0710 18:14:19.659000 140121105339008 torch/_dynamo/guards.py:1425] [__recompiles]     - L['self'].param_groups[0]['lr'] is L['self'].param_groups[0]['initial_lr']
 `Trainer.fit` stopped: `max_epochs=5` reached.
